@@ -1,13 +1,20 @@
-# UOLHOST Test
+# UOLHOST Front-End Test
 
 This test has been solved using **React**
 
 
-## Pre-requisite
+## Prerequisite
 
 * Node >10
 
 * Yarn
+
+
+## Install modules
+
+```bash
+yarn
+```
 
 
 ## Run
