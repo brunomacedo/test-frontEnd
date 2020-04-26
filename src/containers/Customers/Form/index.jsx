@@ -11,6 +11,9 @@ import arrow from '../../../assets/images/arrow.png';
 import Loading from '../../../components/Loading';
 import Container from '../../../components/Container';
 import {
+  formatCPF, formatPhone, validateCPF, validateEmail,
+} from '../../../helpers';
+import {
   loadCustomers,
   addCustomer,
   updateCustomer,
@@ -30,6 +33,11 @@ class CustomersForm extends Component {
       },
       status: String(),
     },
+    validators: {
+      cpf: false,
+      email: false,
+      tel: false,
+    },
   }
 
   async componentDidMount() {
@@ -39,8 +47,8 @@ class CustomersForm extends Component {
       await propsLoadCustomers();
     }
 
-    await this.setState({ loading: false });
-    await this.onPageLoad();
+    this.setState({ loading: false });
+    this.onPageLoad();
   }
 
   onPageLoad = () => {
@@ -66,13 +74,28 @@ class CustomersForm extends Component {
     }
   }
 
+  onHandleFormatters = (name, value) => ({
+    cpf: formatCPF(value),
+    tel: formatPhone(value),
+  }[name] || value)
+
+  onHandleValidator = (name, value) => ({
+    cpf: !validateCPF(value) && value !== '',
+    email: !validateEmail(value),
+    tel: value.length < 14 && value !== '',
+  }[name] || false)
+
   onHandleChangeOne = ({ target }) => {
     const { value, name } = target;
 
     this.setState(prevState => ({
       customer: {
         ...prevState.customer,
-        [name]: value,
+        [name]: this.onHandleFormatters(name, value),
+      },
+      validators: {
+        ...prevState.validators,
+        [name]: this.onHandleValidator(name, value),
       },
     }));
   }
@@ -85,8 +108,12 @@ class CustomersForm extends Component {
         ...prevState.customer,
         contact: {
           ...prevState.customer.contact,
-          [name]: value,
+          [name]: this.onHandleFormatters(name, value),
         },
+      },
+      validators: {
+        ...prevState.validators,
+        [name]: this.onHandleValidator(name, value),
       },
     }));
   }
@@ -98,12 +125,15 @@ class CustomersForm extends Component {
       updateCustomer: propsUpdateCustomer,
       history,
     } = this.props;
-    const { customer, editing } = this.state;
-    const { _id: itemID } = customer;
+    const { customer, editing, validators } = this.state;
+    const blockSend = Object.keys(validators).filter(item => validators[item]);
+    // const { _id: itemID } = customer;
+
+    if (blockSend.length > 0) return;
 
     if (!editing) {
       propsAddCustomer(customer);
-      history.push(`/clientes/${itemID}`);
+      // history.push(`/clientes/${itemID}`);
       this.setState({
         editing: true,
         loading: false,
@@ -111,14 +141,28 @@ class CustomersForm extends Component {
     } else {
       propsUpdateCustomer(customer);
     }
+
+    history.push('/clientes');
   }
 
   render() {
-    const { loading, editing, customer } = this.state;
+    const {
+      loading, editing, customer, validators,
+    } = this.state;
+
+    const {
+      cpf: isCPF,
+      email: isEmail,
+      tel: isTel,
+    } = validators;
+
     const {
       name, contact, cpf, status,
     } = customer;
-    const { email, tel } = contact;
+
+    const {
+      email, tel,
+    } = contact;
 
     return (
       <Container
@@ -134,10 +178,13 @@ class CustomersForm extends Component {
       >
         {!loading ? (
           <form className="page-form" onSubmit={this.onHandleSubmit}>
-            <input value={name} name="name" onChange={this.onHandleChangeOne} placeholder="Nome" type="text" />
-            <input value={email} name="email" onChange={this.onHandleChangeLevel} placeholder="E-mail" type="text" />
-            <input value={cpf} name="cpf" onChange={this.onHandleChangeOne} placeholder="CPF" type="text" />
-            <input value={tel} name="tel" onChange={this.onHandleChangeLevel} placeholder="Telefone" type="text" />
+            <input value={name} name="name" onChange={this.onHandleChangeOne} placeholder="Nome" type="text" required />
+            <input value={email} name="email" onChange={this.onHandleChangeLevel} placeholder="E-mail" type="text" required />
+            {isEmail && <span className="field-error">E-mail inválido.</span>}
+            <input value={cpf} name="cpf" onChange={this.onHandleChangeOne} placeholder="CPF" type="text" maxLength="14" />
+            {isCPF && <span className="field-error">CPF inválido.</span>}
+            <input value={tel} name="tel" onChange={this.onHandleChangeLevel} placeholder="Telefone" type="text" maxLength="15" />
+            {isTel && <span className="field-error">Telefone inválido.</span>}
             <div className="selectForm">
               <select name="status" value={status} onChange={this.onHandleChangeOne}>
                 <option>Status</option>

@@ -20,7 +20,7 @@ class Home extends Component {
       await propsLoadCustomers();
     }
 
-    await this.setState({ loading: false });
+    this.setState({ loading: false });
   }
 
   render() {

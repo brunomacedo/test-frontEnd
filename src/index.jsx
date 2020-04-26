@@ -6,7 +6,7 @@ import store from './store';
 import Routers from './routers';
 
 import './assets/styles/main.sass';
-// import * as serviceWorker from './serviceWorker';
+import * as serviceWorker from './serviceWorker';
 
 ReactDOM.render(
   <Provider store={store}>
@@ -15,4 +15,4 @@ ReactDOM.render(
   document.getElementById('root'),
 );
 
-// serviceWorker.register();
+serviceWorker.register();
